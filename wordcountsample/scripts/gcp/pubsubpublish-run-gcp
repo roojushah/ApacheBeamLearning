@@ -1,0 +1,48 @@
+#!/bin/sh
+
+currentDir=`dirname $0`
+basePath="${currentDir}/../.."
+projectName="kd-project-01"
+region="europe-west2"
+inputFileName="samplerecorddata.txt"
+inputPathLocal="${basePath}/input_samples/${inputFileName}"
+pubsubTopic="sampletopic"
+
+pubsubTopicRunning=`gcloud pubsub topics list | grep ${pubsubTopic} | wc -l`
+rc=$?
+if [ "${rc}" != "0" ]; then
+  echo "Failed to get pubsub topic list"
+  exit 1
+fi
+
+if [ "${pubsubTopicRunning}" = "0" ];then
+  gcloud pubsub topics create ${pubsubTopic} --message-storage-policy-allowed-regions=europe-west2
+  rc=$?
+  if [ "${rc}" != "0" ]; then
+    echo "Failed to create pubsub topic"
+    exit 1
+  fi
+  echo "Pubsub topic : ${pubsubTopic} successfully created"
+fi 
+
+count=0
+
+while [ ${count} -le 200 ]; do
+  count=$((count + 1))
+  sleep 5s
+  while read line; do
+    gcloud pubsub topics publish ${pubsubTopic} --message "${line}"
+    rc=$?
+    if [ "${rc}" != "0" ]; then
+      echo "Failed to publish to pubsub topic : ${pubsubTopic}"
+    fi
+    sleep 2s
+  done < ${inputPathLocal}
+done
+
+gcloud pubsub topics delete ${pubsubTopic}
+rc=$?
+if [ "${rc}" != "0" ]; then
+  echo "Failed to delete pubsub topic"
+  exit 1
+fi

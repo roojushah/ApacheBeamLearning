@@ -1,0 +1,33 @@
+#!/bin/sh
+
+currentDir=`dirname $0`
+basePath="${currentDir}/../.."
+
+projectName="kd-project-01"
+region="europe-west2"
+bucketBasePath="gs://kdtestbucket"
+jarPath="${basePath}/dataflowsamplecore/target/dataflowsamplecore-1.0.0-bundle.jar"
+inputFileName="samplerecorddata.txt"
+inputPathLocal="${basePath}/input_samples/${inputFileName}"
+inputPath="${bucketBasePath}/input_sample/${inputFileName}"
+outputDir="${bucketBasePath}/output/avro_conversion"
+outputPath="${outputDir}/result"
+jobName="avroconversion-${dataType}-`date +%Y%m%d%H%M%S`"
+stagingLocation="${bucketBasePath}/staging/${jobName}"
+
+dataType="SAMPLERECORD"
+
+gsutil cp ${inputPathLocal} ${inputPath}
+gsutil rm -r ${outputDir}
+
+java -cp ${jarPath} dataflowsample.main.AvroConverterSampleMain \
+  --runner=DataflowRunner \
+  --project=${projectName} \
+  --region="${region}" \
+  --stagingLocation=${stagingLocation} \
+  --jobName="${jobName}" \
+  --input=${inputPath} \
+  --datatype="${dataType}" \
+  --output=${outputPath}
+
+gsutil rm -r ${stagingLocation}

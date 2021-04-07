@@ -1,0 +1,45 @@
+#!/bin/sh
+
+currentDir=`dirname $0`
+basePath="${currentDir}/../.."
+projectName="kd-project-01"
+region="europe-west2"
+bucketBasePath="gs://kdtestbucket"
+dataset="sampledataset"
+dataType="SAMPLERECORD"
+jarPath="${basePath}/dataflowsamplecore/target/dataflowsamplecore-1.0.0-bundle.jar"
+inputPath="NA"
+outputPath="NA"
+jobName="pubsubtobq-${dataType}-`date +%Y%m%d%H%M%S`"
+stagingBaseLocation="${bucketBasePath}/staging"
+tempBaseLocation="${bucketBasePath}/temp"
+stagingLocation="${stagingBaseLocation}/${jobName}"
+tempLocation="${tempBaseLocation}/${jobName}"
+pubsubTopic="sampletopic"
+windowSize="10"
+
+# Create dataset if not exists
+bq show ${projectName}:${dataset}
+rc=$?
+if [ "${rc}" != "0" ]; then
+  bq --location=${region} mk --dataset --description "Sample Dataset" ${projectName}:${dataset}
+fi
+
+java -cp ${jarPath} dataflowsample.main.PubSubSubscriberMain \
+  --runner=DataflowRunner \
+  --project=${projectName} \
+  --region=${region} \
+  --stagingLocation=${stagingLocation} \
+  --tempLocation=${tempLocation} \
+  --jobName="${jobName}" \
+  --input="${inputPath}" \
+  --output="${outputPath}" \
+  --datatype="${dataType}" \
+  --bqProject=${projectName} \
+  --bqDataset=${dataset} \
+  --bqTableName=${dataType} \
+  --topic=${pubsubTopic} \
+  --windowSize=${windowSize}
+
+gsutil rm -r ${stagingBaseLocation}
+gsutil rm -r ${tempBaseLocation}

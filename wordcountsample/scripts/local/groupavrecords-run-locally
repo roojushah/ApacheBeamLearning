@@ -1,0 +1,29 @@
+
+currentDir=`dirname $0`
+
+echo "currentDir : ${currentDir}"
+baseDir="${currentDir}/../.."
+
+echo "Running avro conversion first...."
+sh ${currentDir}/avroconversion-run-locally
+echo "Avro conversion finished...."
+
+dataType="SAMPLERECORD"
+
+jarPath="${baseDir}/dataflowsamplecore/target/dataflowsamplecore-1.0.0-bundle.jar"
+inputPath="${baseDir}/output/avro_conversion"
+outputDir="${baseDir}/output/avrogroup_conversion"
+outputPath="${outputDir}/result"
+
+if [ -d ${outputDir} ]; then
+  echo "Output directory Exists, deleting it"
+  rm -rf ${outputDir}
+fi
+
+java -cp ${jarPath} dataflowsample.main.GroupByKeySampleMain \
+  --runner=DirectRunner \
+  --input="${inputPath}" \
+  --datatype="${dataType}" \
+  --output="${outputPath}"
+
+

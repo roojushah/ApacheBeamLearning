@@ -1,0 +1,21 @@
+
+currentDir=`dirname $0`
+
+echo "currentDir : ${currentDir}"
+basePath="${currentDir}/../.."
+
+jarPath="${basePath}/dataflowsamplecore/target/dataflowsamplecore-1.0.0-bundle.jar"
+inputPath="${basePath}/input_samples/samplerecorddata.txt"
+outputDir="${basePath}/output/avro_conversion"
+outputPath="${outputDir}/result"
+
+if [ -d ${outputDir} ]; then
+  echo "Output directory Exists, deleting it"
+  rm -rf ${outputDir}
+fi
+
+java -cp ${jarPath} dataflowsample.main.AvroConverterSampleMain \
+  --runner=DirectRunner \
+  --input=${inputPath} \
+  --datatype="SAMPLERECORD" \
+  --output=${outputPath}

@@ -1,0 +1,20 @@
+
+currentDir=`dirname $0`
+basePath="${currentDir}/../.."
+projectName="MyFirstProject"
+
+jarPath="${basePath}/wordcountsamplecore/target/wordcountsamplecore-1.0.0-bundle.jar"
+inputPath="${basePath}/input_samples/wordcountsample.txt"
+outputDir="${basePath}/output/wordcount"
+outputPath="${outputDir}/result"
+
+if [ -d ${outputDir} ]; then
+  echo "Output directory Exists, deleting it"
+  rm -rf ${outputDir}
+fi
+
+java -cp ${jarPath} wordcountsample.main.WordCountSampleMain \
+  --runner=DirectRunner \
+  --input=${inputPath} \
+  --output=${outputPath} \
+  --project=${projectName}

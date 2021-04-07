@@ -1,0 +1,44 @@
+#!/bin/sh
+
+currentDir=`dirname $0`
+basePath="${currentDir}/../.."
+projectName="kd-project-01"
+region="europe-west2"
+bucketBasePath="gs://kdtestbucket"
+dataset="sampledataset"
+dataType="SAMPLERECORD"
+jarPath="${basePath}/dataflowsamplecore/target/dataflowsamplecore-1.0.0-bundle.jar"
+inputPath="${bucketBasePath}/output/avro_conversion"
+jobName="BQINSERT-${dataType}-`date +%Y%m%d%H%M%S`"
+stagingBaseLocation="${bucketBasePath}/staging"
+tempBaseLocation="${bucketBasePath}/temp"
+stagingLocation="${stagingBaseLocation}/${jobName}"
+tempLocation="${tempBaseLocation}/${jobName}"
+
+# Create dataset if not exists
+bq show ${projectName}:${dataset}
+rc=$?
+if [ "${rc}" != "0" ]; then
+  bq --location=${region} mk --dataset --description "Sample Dataset" ${projectName}:${dataset}
+fi
+
+#echo "Running avro conversion first...."
+#sh ${currentDir}/avroconversion-run-gcp
+#echo "Avro conversion finished...."
+
+java -cp ${jarPath} dataflowsample.main.BigQueryInsertSampleMain \
+  --runner=DataflowRunner \
+  --project=${projectName} \
+  --region=${region} \
+  --stagingLocation=${stagingLocation} \
+  --tempLocation=${tempLocation} \
+  --jobName="${jobName}" \
+  --input="${inputPath}" \
+  --output="NA" \
+  --datatype="${dataType}" \
+  --bqProject=${projectName} \
+  --bqDataset=${dataset} \
+  --bqTableName=${dataType}
+
+gsutil rm -r ${stagingBaseLocation}
+gsutil rm -r ${tempBaseLocation}
