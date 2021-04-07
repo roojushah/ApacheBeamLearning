@@ -1,4 +1,4 @@
-package dataflowsample.constants;
+package wordcountsample.constants;
 
 public class Constants {
 	public static final String LOCAL_MODE = "LOCAL";
